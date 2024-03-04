@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "Efficom School project 2024"
+version = "1.0.0"
+readme = "README.md"
+description = "A project showcasing a small and representative app"
+authors = ["Customs Bridge <contact@customsbridge.fr>"]
+
+[tool.poetry.dependencies]
+python = ">=3.11,<3.12"
+fastapi = "0.110.0"
+python-multipart = "0.0.9"
+python-jose = {extras = ["cryptography"], version = "^3.3.0"}
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry-core=1.1.12"]
+build-backend = "poetry.core.masonry.api"
