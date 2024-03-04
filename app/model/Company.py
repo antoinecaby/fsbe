@@ -1,16 +1,13 @@
-from typing import List
+# Company.py
+
 from sqlmodel import SQLModel, Field, Relationship
+from typing import List
+from .User import User  # Import the User model
 
 class Company(SQLModel, table=True):
     id: int = Field(primary_key=True)
     name: str
     address: str
-    users: "List[User]" = Relationship(back_populates="company")
 
-    @classmethod
-    def get_company(cls, session, company_id: int):
-        return session.query(cls).filter(cls.id == company_id).first()
-
-    @classmethod
-    def get_companies(cls, session):
-        return session.query(cls).all()
+    # Define the relationship with User model
+    users: List[User] = Relationship(back_populates="company")

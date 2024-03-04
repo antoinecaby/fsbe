@@ -1,7 +1,5 @@
 from typing import List
 from sqlmodel import SQLModel, Field, Relationship
-from model.Company import Company
-
 from model.PlanningActivity import PlanningActivity
 
 class User(SQLModel, table=True):
