@@ -1,5 +1,7 @@
-from sqlalchemy import create_engine
+# database.py
+from sqlalchemy import create_engine, inspect
 from sqlmodel import SQLModel, Session
+from model.models import User, Company, Notification, PlanningActivity
 
 # Database URL for SQLite
 DATABASE_URL = "sqlite:///./fsbe.db"
@@ -15,3 +17,9 @@ def get_session():
 # Function to create the database tables
 def create_database():
     SQLModel.metadata.create_all(engine)
+    # Create tables for all SQLModel classes only if they don't already exist
+    with engine.begin() as conn:
+        inspector = inspect(engine)
+        for model in [User, Company, Notification, PlanningActivity]:
+            if not inspector.has_table(model.__tablename__):
+                model.__table__.create(engine)
