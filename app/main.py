@@ -3,6 +3,7 @@ from fastapi import Depends, FastAPI, HTTPException
 from sqlmodel import Session, select
 from database import create_database, get_session ,engine
 from model.models import User, Company, Notification, PlanningActivity
+from passlib.context import CryptContext
 
 # Call create_database() to create the database tables
 create_database()
@@ -16,11 +17,15 @@ def get_session():
 
 # CRUD operations for User
 
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
 @app.post("/users/", response_model=User)
 def create_user(user: User, session: Session = Depends(get_session)):
     """
     Create a new user.
     """
+    hashed_password = pwd_context.hash(user.password)  # Hacher le mot de passe
+    user.password = hashed_password  # Mettre à jour le mot de passe avec sa version hachée
     session.add(user)
     session.commit()
     session.refresh(user)
