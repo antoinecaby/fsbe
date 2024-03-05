@@ -1,7 +1,7 @@
 from typing import List
 from fastapi import Depends, FastAPI, HTTPException
 from sqlmodel import Session, select
-from database import create_database, get_session
+from database import create_database, get_session ,engine
 from model.models import User, Company, Notification, PlanningActivity
 
 # Call create_database() to create the database tables
