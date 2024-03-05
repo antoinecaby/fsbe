@@ -24,3 +24,7 @@ class PlanningActivityCreate(BaseModel):
     start_time: str
     end_time: str
     user_id: int
+
+class UserLogin(BaseModel):
+    email: str
+    password: str

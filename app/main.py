@@ -2,9 +2,10 @@
 from typing import List
 from fastapi import Depends, FastAPI, HTTPException
 from sqlmodel import Session, select
+from Security.SecurityManager import SecurityManager
 from database import create_database, get_session ,engine
 from model.models import User, Company, Notification, PlanningActivity
-from schemas import CompanyCreate, NotificationCreate, PlanningActivityCreate, UserCreate
+from schemas import CompanyCreate, NotificationCreate, PlanningActivityCreate, UserCreate, UserLogin
 
 # Call create_database() to create the database tables
 create_database()
@@ -15,7 +16,46 @@ app = FastAPI()
 def get_session():
     with Session(engine) as session:
         yield session
+# Dependency to get the database session
+def get_db():
+    db = Session(engine)
+    try:
+        yield db
+    finally:
+        db.close()
+security_manager = SecurityManager()
 
+# Signup endpoint
+@app.post("/signup/", response_model=User)
+def signup(user: UserCreate, db: Session = Depends(get_db)):
+    """
+    Create a new user.
+    """
+    hashed_password = security_manager.get_password_hash(user.password)
+    db_user = User(
+        username=user.username,
+        email=user.email,
+        password=hashed_password,
+        company_id=user.company_id
+    )
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
+    return db_user
+
+# Login endpoint
+@app.post("/login/")
+def login(user_login: UserLogin, db: Session = Depends(get_db)):
+    """
+    User login.
+    """
+    db_user = db.query(User).filter(User.email == user_login.email).first()
+    if not db_user or not security_manager.verify_password(user_login.password, db_user.password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect email or password",
+        )
+    return {"message": "Login successful"}
 # CRUD operations for User
 @app.post("/users/", response_model=User)
 def create_user(user: UserCreate, session: Session = Depends(get_session)):
