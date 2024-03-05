@@ -1,10 +1,9 @@
-# PlanningActivity.py
-
+# model.PlanningActivity.py
 from sqlmodel import SQLModel, Field, Relationship
 from typing import List
-from .User import User  # Import the User model
 
-class PlanningActivity(SQLModel, table=True):
+
+class planning(SQLModel, table=True):
     id: int = Field(primary_key=True)
     name: str
     day: str
@@ -13,4 +12,4 @@ class PlanningActivity(SQLModel, table=True):
     company_id: int
 
     # Define the relationship with User model
-    participants: List[User] = Relationship(back_populates="activities")
+    participants: List[user] = Relationship(back_populates="activities")

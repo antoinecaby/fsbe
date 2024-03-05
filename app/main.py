@@ -1,39 +1,70 @@
-from fastapi import FastAPI
-from sqlmodel import SQLModel, create_engine, Session
-from model.Company import Company
-from model.Notification import Notification
-from model.PlanningActivity import PlanningActivity
-from model.User import User
+# main.py
+
+from typing import List
+from fastapi import Depends, FastAPI, HTTPException, status
+from sqlmodel import Session, select
+from model.models import User, Company, Notification, PlanningActivity
+from database import engine
 
 app = FastAPI()
 
-DATABASE_URL = "sqlite:///./fsbe.db"
-engine = create_engine(DATABASE_URL)
-
-def create_database():
-    SQLModel.metadata.create_all(engine)
-
-def main():
-    create_database()
-
+# Dependency to get the database session
+def get_session():
     with Session(engine) as session:
-        # Add instances to the session
-        user = User(username="John", email="john@example.com", password="password123", company_id=1)
-        session.add(user)
+        yield session
 
-        company = Company(name="ABC Inc.", address="123 Street")
-        session.add(company)
+# Endpoint to create a new user
+@app.post("/users/", response_model=User)
+def create_user(user: User, session: Session = Depends(get_session)):
+    session.add(user)
+    session.commit()
+    session.refresh(user)
+    return user
 
-        planning_activity = PlanningActivity(name="Meeting", day="2024-03-05", start_time="09:00", end_time="10:00", company_id=1)
-        session.add(planning_activity)
+# Endpoint to get all users
+@app.get("/users/", response_model=List[User])
+def get_users(skip: int = 0, limit: int = 10, session: Session = Depends(get_session)):
+    users = session.exec(select(User).offset(skip).limit(limit)).all()
+    return users
 
-        notification = Notification(message="Meeting rescheduled", status="unread", user_id=1, activity_id=1)
-        session.add(notification)
+# Endpoint to create a new company
+@app.post("/companies/", response_model=Company)
+def create_company(company: Company, session: Session = Depends(get_session)):
+    session.add(company)
+    session.commit()
+    session.refresh(company)
+    return company
 
-        # Commit the session to save changes to the database
-        session.commit()
+# Endpoint to get all companies
+@app.get("/companies/", response_model=List[Company])
+def get_companies(skip: int = 0, limit: int = 10, session: Session = Depends(get_session)):
+    companies = session.exec(select(Company).offset(skip).limit(limit)).all()
+    return companies
 
-@app.get("/")
-async def root():
-    main()
-    return {"message": "Data initialized successfully!"}
+# Endpoint to create a new notification
+@app.post("/notifications/", response_model=Notification)
+def create_notification(notification: Notification, session: Session = Depends(get_session)):
+    session.add(notification)
+    session.commit()
+    session.refresh(notification)
+    return notification
+
+# Endpoint to get all notifications
+@app.get("/notifications/", response_model=List[Notification])
+def get_notifications(skip: int = 0, limit: int = 10, session: Session = Depends(get_session)):
+    notifications = session.exec(select(Notification).offset(skip).limit(limit)).all()
+    return notifications
+
+# Endpoint to create a new planning activity
+@app.post("/activities/", response_model=PlanningActivity)
+def create_activity(activity: PlanningActivity, session: Session = Depends(get_session)):
+    session.add(activity)
+    session.commit()
+    session.refresh(activity)
+    return activity
+
+# Endpoint to get all planning activities
+@app.get("/activities/", response_model=List[PlanningActivity])
+def get_activities(skip: int = 0, limit: int = 10, session: Session = Depends(get_session)):
+    activities = session.exec(select(PlanningActivity).offset(skip).limit(limit)).all()
+    return activities

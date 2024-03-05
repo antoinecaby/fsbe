@@ -1,7 +1,8 @@
+# model.Notification.py
 from typing import List
 from sqlmodel import SQLModel, Field
 
-class Notification(SQLModel, table=True):
+class notification(SQLModel, table=True):
     id: int = Field(primary_key=True)
     message: str
     status: str
