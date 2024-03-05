@@ -33,7 +33,8 @@ def signup(user: UserCreate, db: Session = Depends(get_db)):
     """
     hashed_password = security_manager.get_password_hash(user.password)
     db_user = User(
-        username=user.username,
+        firstName=user.firstName, 
+        lastName=user.lastName, 
         email=user.email,
         password=hashed_password,
         company_id=user.company_id
@@ -58,17 +59,22 @@ def login(user_login: UserLogin, db: Session = Depends(get_db)):
     return {"message": "Login successful"}
 # CRUD operations for User
 @app.post("/users/", response_model=User)
-def create_user(user: UserCreate, session: Session = Depends(get_session)):
+def signup(user: UserCreate, db: Session = Depends(get_db)):
     """
     Create a new user.
     """
-    db_user = User(**user.dict())
-    session.add(db_user)
-    session.commit()
-    session.refresh(db_user)
+    hashed_password = security_manager.get_password_hash(user.password)
+    db_user = User(
+        firstName=user.firstName, 
+        lastName=user.lastName, 
+        email=user.email,
+        password=hashed_password,
+        company_id=user.company_id
+    )
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
     return db_user
-
-# Similarly update routes for other models (Company, Notification, PlanningActivity) using respective Create models
 
 @app.get("/users/", response_model=List[User])
 def get_users(skip: int = 0, limit: int = 10, session: Session = Depends(get_session)):
