@@ -25,24 +25,68 @@ def get_db():
         db.close()
 security_manager = SecurityManager()
 
+
 # Signup endpoint
 @app.post("/signup/", response_model=User)
 def signup(user: UserCreate, db: Session = Depends(get_db)):
     """
     Create a new user.
     """
+    # Hash the password
     hashed_password = security_manager.get_password_hash(user.password)
+    
+    # Encrypt the email, first name, and last name
+    encrypted_email = security_manager.encrypt(user.email)
+    encrypted_first_name = security_manager.encrypt(user.firstName)
+    encrypted_last_name = security_manager.encrypt(user.lastName)
+    
+    # Create the User object with encrypted fields
     db_user = User(
-        firstName=user.firstName, 
-        lastName=user.lastName, 
-        email=user.email,
+        firstName=encrypted_first_name, 
+        lastName=encrypted_last_name, 
+        email=encrypted_email,
         password=hashed_password,
         company_id=user.company_id
     )
+    
+    # Save the user to the database
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
+    
     return db_user
+
+# ADD user endpoint
+
+@app.post("/users/", response_model=User)
+def signup(user: UserCreate, db: Session = Depends(get_db)):
+    """
+    Create a new user.
+    """
+    # Hash the password
+    hashed_password = security_manager.get_password_hash(user.password)
+    
+    # Encrypt the email, first name, and last name
+    encrypted_email = security_manager.encrypt(user.email)
+    encrypted_first_name = security_manager.encrypt(user.firstName)
+    encrypted_last_name = security_manager.encrypt(user.lastName)
+    
+    # Create the User object with encrypted fields
+    db_user = User(
+        firstName=encrypted_first_name, 
+        lastName=encrypted_last_name, 
+        email=encrypted_email,
+        password=hashed_password,
+        company_id=user.company_id
+    )
+    
+    # Save the user to the database
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
+    
+    return db_user
+
 
 # Login endpoint
 @app.post("/login/")
@@ -50,49 +94,57 @@ def login(user_login: UserLogin, db: Session = Depends(get_db)):
     """
     User login.
     """
+    # Retrieve the user from the database based on the provided email
     db_user = db.query(User).filter(User.email == user_login.email).first()
+    
+    # Verify the user's existence and password
     if not db_user or not security_manager.verify_password(user_login.password, db_user.password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",
         )
+    
+    # Return a success message (this is where you would typically generate and return a token)
     return {"message": "Login successful"}
-# CRUD operations for User
-@app.post("/users/", response_model=User)
-def signup(user: UserCreate, db: Session = Depends(get_db)):
-    """
-    Create a new user.
-    """
-    hashed_password = security_manager.get_password_hash(user.password)
-    db_user = User(
-        firstName=user.firstName, 
-        lastName=user.lastName, 
-        email=user.email,
-        password=hashed_password,
-        company_id=user.company_id
-    )
-    db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
-    return db_user
 
+# Endpoint to retrieve all users
 @app.get("/users/", response_model=List[User])
-def get_users(skip: int = 0, limit: int = 10, session: Session = Depends(get_session)):
+def get_users(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
     """
     Get all users.
     """
-    users = session.exec(select(User).offset(skip).limit(limit)).all()
+    # Retrieve users from the database
+    users = db.query(User).offset(skip).limit(limit).all()
+    
+    # Decrypt email, first name, and last name for each user
+    for user in users:
+        user.email = security_manager.decrypt(user.email)
+        user.firstName = security_manager.decrypt(user.firstName)
+        user.lastName = security_manager.decrypt(user.lastName)
+    
     return users
-
+# Endpoint to retrieve a user by ID
 @app.get("/users/{user_id}", response_model=User)
-def get_user(user_id: int, session: Session = Depends(get_session)):
+def get_user(user_id: int, db: Session = Depends(get_db)):
     """
     Get a specific user by ID.
     """
-    user = session.get(User, user_id)
-    if user is None:
+    # Retrieve the user from the database based on the provided ID
+    user = db.query(User).filter(User.id == user_id).first()
+    
+    # Verify the user's existence
+    if not user:
         raise HTTPException(status_code=404, detail="User not found")
+    
+    # Decrypt email, first name, and last name for the user
+    user.email = security_manager.decrypt(user.email)
+    user.firstName = security_manager.decrypt(user.firstName)
+    user.lastName = security_manager.decrypt(user.lastName)
+    
     return user
+
+
+
 
 @app.put("/users/{user_id}", response_model=User)
 def update_user(user_id: int, user_update: UserCreate, session: Session = Depends(get_session)):
