@@ -3,7 +3,7 @@ from typing import List
 from sqlmodel import SQLModel, Field, Relationship
 
 class User(SQLModel, table=True):
-    id: int = Field(primary_key=True, default=None)
+    id: int = Field(primary_key=True)
     username: str
     email: str
     password: str
@@ -20,7 +20,7 @@ class User(SQLModel, table=True):
 
 
 class Company(SQLModel, table=True):
-    id: int = Field(primary_key=True, default=None)
+    id: int = Field(primary_key=True)
     name: str
     address: str
 
@@ -29,7 +29,7 @@ class Company(SQLModel, table=True):
 
 
 class Notification(SQLModel, table=True):
-    id: int = Field(primary_key=True, default=None)
+    id: int = Field(primary_key=True)
     message: str
     status: str
     user_id: int = Field(foreign_key="user.id")  # Foreign key relationship with User table
@@ -40,7 +40,7 @@ class Notification(SQLModel, table=True):
 
 
 class PlanningActivity(SQLModel, table=True):
-    id: int = Field(primary_key=True, default=None)
+    id: int = Field(primary_key=True)
     name: str
     day: str
     start_time: str
