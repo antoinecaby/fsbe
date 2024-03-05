@@ -1,8 +1,10 @@
+# main.py
 from typing import List
 from fastapi import Depends, FastAPI, HTTPException
 from sqlmodel import Session, select
 from database import create_database, get_session ,engine
 from model.models import User, Company, Notification, PlanningActivity
+from schemas import CompanyCreate, NotificationCreate, PlanningActivityCreate, UserCreate
 
 # Call create_database() to create the database tables
 create_database()
@@ -15,16 +17,18 @@ def get_session():
         yield session
 
 # CRUD operations for User
-
 @app.post("/users/", response_model=User)
-def create_user(user: User, session: Session = Depends(get_session)):
+def create_user(user: UserCreate, session: Session = Depends(get_session)):
     """
     Create a new user.
     """
-    session.add(user)
+    db_user = User(**user.dict())
+    session.add(db_user)
     session.commit()
-    session.refresh(user)
-    return user
+    session.refresh(db_user)
+    return db_user
+
+# Similarly update routes for other models (Company, Notification, PlanningActivity) using respective Create models
 
 @app.get("/users/", response_model=List[User])
 def get_users(skip: int = 0, limit: int = 10, session: Session = Depends(get_session)):
@@ -45,19 +49,21 @@ def get_user(user_id: int, session: Session = Depends(get_session)):
     return user
 
 @app.put("/users/{user_id}", response_model=User)
-def update_user(user_id: int, user: User, session: Session = Depends(get_session)):
+def update_user(user_id: int, user_update: UserCreate, session: Session = Depends(get_session)):
     """
     Update a user by ID.
     """
     db_user = session.get(User, user_id)
     if db_user is None:
         raise HTTPException(status_code=404, detail="User not found")
-    for var, value in vars(user).items():
+    for var, value in vars(user_update).items():
         setattr(db_user, var, value)
     session.add(db_user)
     session.commit()
     session.refresh(db_user)
     return db_user
+
+
 
 @app.delete("/users/{user_id}", response_model=User)
 def delete_user(user_id: int, session: Session = Depends(get_session)):
@@ -70,18 +76,20 @@ def delete_user(user_id: int, session: Session = Depends(get_session)):
     session.delete(user)
     session.commit()
     return user
+# main.py
 
 # CRUD operations for Company
 
 @app.post("/companies/", response_model=Company)
-def create_company(company: Company, session: Session = Depends(get_session)):
+def create_company(company: CompanyCreate, session: Session = Depends(get_session)):
     """
     Create a new company.
     """
-    session.add(company)
+    db_company = Company(**company.dict())
+    session.add(db_company)
     session.commit()
-    session.refresh(company)
-    return company
+    session.refresh(db_company)
+    return db_company
 
 @app.get("/companies/", response_model=List[Company])
 def get_companies(skip: int = 0, limit: int = 10, session: Session = Depends(get_session)):
@@ -102,21 +110,20 @@ def get_company(company_id: int, session: Session = Depends(get_session)):
     return company
 
 @app.put("/companies/{company_id}", response_model=Company)
-def update_company(company_id: int, company: Company, session: Session = Depends(get_session)):
+def update_company(company_id: int, company_update: CompanyCreate, session: Session = Depends(get_session)):
     """
     Update a company by ID.
     """
     db_company = session.get(Company, company_id)
     if db_company is None:
         raise HTTPException(status_code=404, detail="Company not found")
-    for var, value in vars(company).items():
+    for var, value in vars(company_update).items():
         setattr(db_company, var, value)
     session.add(db_company)
     session.commit()
     session.refresh(db_company)
     return db_company
 
-@app.delete("/companies/{company_id}", response_model=Company)
 def delete_company(company_id: int, session: Session = Depends(get_session)):
     """
     Delete a company by ID.
@@ -127,17 +134,19 @@ def delete_company(company_id: int, session: Session = Depends(get_session)):
     session.delete(company)
     session.commit()
     return company
+
 # CRUD operations for Notification
 
 @app.post("/notifications/", response_model=Notification)
-def create_notification(notification: Notification, session: Session = Depends(get_session)):
+def create_notification(notification: NotificationCreate, session: Session = Depends(get_session)):
     """
     Create a new notification.
     """
-    session.add(notification)
+    db_notification = Notification(**notification.dict())
+    session.add(db_notification)
     session.commit()
-    session.refresh(notification)
-    return notification
+    session.refresh(db_notification)
+    return db_notification
 
 @app.get("/notifications/", response_model=List[Notification])
 def get_notifications(skip: int = 0, limit: int = 10, session: Session = Depends(get_session)):
@@ -158,14 +167,14 @@ def get_notification(notification_id: int, session: Session = Depends(get_sessio
     return notification
 
 @app.put("/notifications/{notification_id}", response_model=Notification)
-def update_notification(notification_id: int, notification: Notification, session: Session = Depends(get_session)):
+def update_notification(notification_id: int, notification_update: NotificationCreate, session: Session = Depends(get_session)):
     """
     Update a notification by ID.
     """
     db_notification = session.get(Notification, notification_id)
     if db_notification is None:
         raise HTTPException(status_code=404, detail="Notification not found")
-    for var, value in vars(notification).items():
+    for var, value in vars(notification_update).items():
         setattr(db_notification, var, value)
     session.add(db_notification)
     session.commit()
@@ -188,14 +197,15 @@ def delete_notification(notification_id: int, session: Session = Depends(get_ses
 # CRUD operations for PlanningActivity
 
 @app.post("/activities/", response_model=PlanningActivity)
-def create_activity(activity: PlanningActivity, session: Session = Depends(get_session)):
+def create_activity(activity: PlanningActivityCreate, session: Session = Depends(get_session)):
     """
     Create a new planning activity.
     """
-    session.add(activity)
+    db_activity = PlanningActivity(**activity.dict())
+    session.add(db_activity)
     session.commit()
-    session.refresh(activity)
-    return activity
+    session.refresh(db_activity)
+    return db_activity
 
 @app.get("/activities/", response_model=List[PlanningActivity])
 def get_activities(skip: int = 0, limit: int = 10, session: Session = Depends(get_session)):
@@ -215,15 +225,16 @@ def get_activity(activity_id: int, session: Session = Depends(get_session)):
         raise HTTPException(status_code=404, detail="Planning Activity not found")
     return activity
 
+
 @app.put("/activities/{activity_id}", response_model=PlanningActivity)
-def update_activity(activity_id: int, activity: PlanningActivity, session: Session = Depends(get_session)):
+def update_activity(activity_id: int, activity_update: PlanningActivityCreate, session: Session = Depends(get_session)):
     """
     Update a planning activity by ID.
     """
     db_activity = session.get(PlanningActivity, activity_id)
     if db_activity is None:
         raise HTTPException(status_code=404, detail="Planning Activity not found")
-    for var, value in vars(activity).items():
+    for var, value in vars(activity_update).items():
         setattr(db_activity, var, value)
     session.add(db_activity)
     session.commit()
@@ -241,5 +252,3 @@ def delete_activity(activity_id: int, session: Session = Depends(get_session)):
     session.delete(activity)
     session.commit()
     return activity
-
-
