@@ -93,6 +93,8 @@ def get_users(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
         user.lastName = security_manager.decrypt(user.lastName)
     
     return users
+
+
 # Endpoint to retrieve a user by ID
 @app.get("/users/{user_id}", response_model=User)
 def get_user(user_id: int, db: Session = Depends(get_db)):
@@ -119,14 +121,32 @@ def update_user(user_id: int, user_update: UserCreate, session: Session = Depend
     """
     Update a user by ID.
     """
+    # Retrieve the existing user from the database
     db_user = session.get(User, user_id)
+    
+    # Check if the user exists
     if db_user is None:
         raise HTTPException(status_code=404, detail="User not found")
-    for var, value in vars(user_update).items():
-        setattr(db_user, var, value)
+    
+    # Encrypt the updated email, first name, and last name
+    encrypted_email = security_manager.encrypt(user_update.email)
+    encrypted_first_name = security_manager.encrypt(user_update.firstName)
+    encrypted_last_name = security_manager.encrypt(user_update.lastName)
+    
+    # Hash the updated password
+    hashed_password = security_manager.get_password_hash(user_update.password)
+    
+    # Update the user's attributes with the encrypted values and hashed password
+    db_user.email = encrypted_email
+    db_user.firstName = encrypted_first_name
+    db_user.lastName = encrypted_last_name
+    db_user.password = hashed_password
+    
+    # Commit the changes to the database and refresh the user object
     session.add(db_user)
     session.commit()
     session.refresh(db_user)
+    
     return db_user
 
 
