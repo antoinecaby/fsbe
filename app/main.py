@@ -1,6 +1,6 @@
 # main.py
 from typing import List
-from fastapi import Depends, FastAPI, HTTPException,status
+from fastapi import APIRouter, Depends, FastAPI, HTTPException,status
 from sqlmodel import Session, select
 from Security.SecurityManager import SecurityManager
 from database import create_database, get_session ,engine
@@ -9,8 +9,8 @@ from schemas import CompanyCreate, NotificationCreate, PlanningActivityCreate, U
 
 # Call create_database() to create the database tables
 create_database()
-
 app = FastAPI()
+router = APIRouter()
 
 # Dependency to get the database session
 def get_session():
@@ -56,7 +56,6 @@ def signup(user: UserCreate, db: Session = Depends(get_db)):
     
     return db_user
 
-# ADD user endpoint
 
 @app.post("/users/", response_model=User)
 def signup(user: UserCreate, db: Session = Depends(get_db)):
@@ -88,14 +87,23 @@ def signup(user: UserCreate, db: Session = Depends(get_db)):
     return db_user
 
 
-# Login endpoint
+def get_user_by_email(email: str, db: Session):
+    """
+    Retrieve a user by email.
+    """
+    # Encrypt the email before querying the database
+    encrypted_email = security_manager.encrypt(email)
+    
+    # Query the database to get the user by encrypted email
+    return db.exec(select(User).filter(User.email == encrypted_email)).first()
+
 @app.post("/login/")
 def login(user_login: UserLogin, db: Session = Depends(get_db)):
     """
     User login.
     """
     # Retrieve the user from the database based on the provided email
-    db_user = db.query(User).filter(User.email == user_login.email).first()
+    db_user = get_user_by_email(user_login.email, db)
     
     # Verify the user's existence and password
     if not db_user or not security_manager.verify_password(user_login.password, db_user.password):
@@ -107,9 +115,11 @@ def login(user_login: UserLogin, db: Session = Depends(get_db)):
     # Return a success message (this is where you would typically generate and return a token)
     return {"message": "Login successful"}
 
+
 # Endpoint to retrieve all users
 @app.get("/users/", response_model=List[User])
 def get_users(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
+    
     """
     Get all users.
     """
@@ -144,8 +154,6 @@ def get_user(user_id: int, db: Session = Depends(get_db)):
     return user
 
 
-
-
 @app.put("/users/{user_id}", response_model=User)
 def update_user(user_id: int, user_update: UserCreate, session: Session = Depends(get_session)):
     """
@@ -174,7 +182,43 @@ def delete_user(user_id: int, session: Session = Depends(get_session)):
     session.delete(user)
     session.commit()
     return user
-# main.py
+
+
+
+def get_user_by_email(email: str, db: Session):
+    """
+    Retrieve a user by email.
+    """
+    # Retrieve all users from the database
+    all_users = db.exec(select(User)).all()
+    
+    # Decrypt email for each user and filter by email
+    for user in all_users:
+        decrypted_email = security_manager.decrypt(user.email)
+        print("email num : ",user.id," = ",decrypted_email)
+        if decrypted_email == email:
+            return user
+    
+    return None
+
+@app.post("/login/")
+def login(user_login: UserLogin, db: Session = Depends(get_db)):
+    """
+    User login.
+    """
+    # Retrieve the user from the database based on the provided email
+    db_user = get_user_by_email(user_login.email, db)
+    
+    # Verify the user's existence and password
+    if not db_user or not security_manager.verify_password(user_login.password, db_user.password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect email or password",
+        )
+    
+    # Return a success message (this is where you would typically generate and return a token)
+    return {"message": "Login successful"}
+
 
 # CRUD operations for Company
 
