@@ -4,7 +4,8 @@ from sqlmodel import SQLModel, Field, Relationship
 
 class User(SQLModel, table=True):
     id: int = Field(primary_key=True)
-    username: str
+    firstName:str 
+    lastName:str 
     email: str
     password: str
     company_id: int = Field(foreign_key="company.id")  # Foreign key relationship with Company table
