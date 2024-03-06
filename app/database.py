@@ -23,3 +23,13 @@ def create_database():
         for model in [User, Company, Notification, PlanningActivity]:
             if not inspector.has_table(model.__tablename__):
                 model.__table__.create(engine)
+
+from sqlalchemy.orm import Session
+
+# Function to get the database session
+def get_db():
+    db = Session(engine)
+    try:
+        yield db
+    finally:
+        db.close()
