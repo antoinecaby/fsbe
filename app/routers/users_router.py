@@ -1,9 +1,9 @@
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException,status
-from sqlmodel import  Session, select
+from sqlmodel import  Session
 from model.models import User
 from schemas import UserCreate, UserLogin
-from database import get_db,engine,get_session
+from database import get_db
 from Security.SecurityManager import SecurityManager
 
 
