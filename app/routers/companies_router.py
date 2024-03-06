@@ -2,13 +2,13 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
 from sqlmodel import select
-from database import get_session
+from db.database import get_session
 from model.models import Company
-from schemas import CompanyCreate
+from model.schemas import CompanyCreate
 
 router = APIRouter()
 
-# CRUD operations for Company
+# CRUD operations for Companys
 
 @router.post("/companies/", response_model=Company)
 def create_company(company: CompanyCreate, session: Session = Depends(get_session)):
