@@ -3,8 +3,8 @@ from sqlalchemy import create_engine, inspect
 from sqlmodel import SQLModel, Session
 from model.models import User, Company, Notification, PlanningActivity
 
-# Database URL for SQLite
-DATABASE_URL = "sqlite:///./fsbe.db"
+# Database URL for SQLite with the file located in the app/db/ directory
+DATABASE_URL = "sqlite:///./db/fsbe.db"
 
 # Create the engine
 engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
