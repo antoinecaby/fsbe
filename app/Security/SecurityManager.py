@@ -18,4 +18,14 @@ class SecurityManager:
         return self.fernet.encrypt(data.encode()).decode()
 
     def decrypt(self, encrypted_data):
-        return self.fernet.decrypt(encrypted_data.encode()).decode()
+        # Assurez-vous que encrypted_data est une chaîne, puis convertissez-la en bytes
+        if isinstance(encrypted_data, str):
+            encrypted_data_bytes = encrypted_data.encode()
+        else:
+            encrypted_data_bytes = encrypted_data
+        
+        # Décodez les bytes encodés en base64 avant de décrypter
+        decrypted_data = self.fernet.decrypt(encrypted_data_bytes)
+        
+        # Convertissez le résultat déchiffré en chaîne pour le retourner
+        return decrypted_data.decode()
