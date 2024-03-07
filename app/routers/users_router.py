@@ -141,7 +141,7 @@ def get_users(token: Annotated[str, Depends(oauth2_scheme)], skip: int = 0, limi
 
 # Endpoint to retrieve a user by ID
 @app.get("/users/{user_id}", response_model=User)
-def get_user(user_id: int, db: Session = Depends(get_db)):
+def get_user(token: Annotated[str, Depends(oauth2_scheme)], user_id: int, db: Session = Depends(get_db)):
     """
     Get a specific user by ID.
     """
@@ -161,7 +161,7 @@ def get_user(user_id: int, db: Session = Depends(get_db)):
 
 
 @app.put("/users/{user_id}", response_model=User)
-def update_user(user_id: int, user_update: UserCreate, session: Session = Depends(get_db)):
+def update_user(token: Annotated[str, Depends(oauth2_scheme)], user_id: int, user_update: UserCreate, session: Session = Depends(get_db)):
     """
     Update a user by ID.
     """
@@ -196,7 +196,7 @@ def update_user(user_id: int, user_update: UserCreate, session: Session = Depend
 
 
 @app.delete("/users/{user_id}", response_model=User)
-def delete_user(user_id: int, session: Session = Depends(get_db)):
+def delete_user(token: Annotated[str, Depends(oauth2_scheme)], user_id: int, session: Session = Depends(get_db)):
     """
     Delete a user by ID.
     """
