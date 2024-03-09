@@ -1,4 +1,4 @@
-# security/SecurityManager.py
+from typing import Union
 from passlib.context import CryptContext
 from cryptography.fernet import Fernet
 
@@ -8,24 +8,24 @@ class SecurityManager:
         self.key = Fernet.generate_key()
         self.fernet = Fernet(self.key)
 
-    def verify_password(self, plain_password, hashed_password):
+    def verify_password(self, plain_password: str, hashed_password: str) -> bool:
         return self.pwd_context.verify(plain_password, hashed_password)
 
-    def get_password_hash(self, password):
+    def get_password_hash(self, password: str) -> str:
         return self.pwd_context.hash(password)
 
-    def encrypt(self, data):
+    def encrypt(self, data: str) -> str:
         return self.fernet.encrypt(data.encode()).decode()
 
-    def decrypt(self, encrypted_data):
-        # Assurez-vous que encrypted_data est une chaîne, puis convertissez-la en bytes
+    def decrypt(self, encrypted_data: Union[str, bytes]) -> str:
+        # Ensure that encrypted_data is a string, then convert it to bytes
         if isinstance(encrypted_data, str):
             encrypted_data_bytes = encrypted_data.encode()
         else:
             encrypted_data_bytes = encrypted_data
         
-        # Décodez les bytes encodés en base64 avant de décrypter
+        # Decode the base64 encoded bytes before decrypting
         decrypted_data = self.fernet.decrypt(encrypted_data_bytes)
         
-        # Convertissez le résultat déchiffré en chaîne pour le retourner
+        # Convert the decrypted result to string before returning
         return decrypted_data.decode()

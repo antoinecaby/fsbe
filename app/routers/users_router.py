@@ -1,6 +1,7 @@
 from typing import List, Annotated
 from fastapi import APIRouter, Depends, HTTPException,status
 from sqlmodel import  Session
+from internal.auth import get_decoded_token
 from model.models import User
 from db.database import get_db
 from Security.SecurityManager import SecurityManager
@@ -15,47 +16,7 @@ app=router
 
 security_manager = SecurityManager()
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/users/login")
-ACCESS_TOKEN_EXPIRE_MINUTES= 60*24
-SECRET_KEY = "c60655a4fb84f0883c0ee1d2510eb332769029bc23ecd5796c53010ab01ba6f7"
-ALGORITHM = "HS256"
 
-async def get_decoded_token(token: str = Depends(oauth2_scheme)):
-  try:
-    payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-    return(payload.get("sub"))
-  except JWTError as e:
-    raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token", headers={"WWW-Authenticate": "Bearer"}) from e
-
-@router.post("/login/")
-def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
-    """
-    User login.
-    """
-    # Retrieve the user from the database based on the provided email
-    all_users = db.query(User).all()
-    for user in all_users:
-        decrypted_email = security_manager.decrypt(user.email)
-        if decrypted_email == form_data.username:
-            # Verify the user's password
-            if security_manager.verify_password(form_data.password, user.password):
-                access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-                jwt_creation_time = datetime.now(timezone.utc)
-                expire = jwt_creation_time + access_token_expires
-                to_encode = {
-                    "sub": decrypted_email,
-                    "exp": expire,
-                    "iat": jwt_creation_time
-                }
-                
-                encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-                return {"access_token": encoded_jwt, "token_type": "bearer"}
-    
-    # If user is not found or password is incorrect, raise an HTTPException
-    raise HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Incorrect email or password",
-    )
 
 
 # Signup endpoint
@@ -90,7 +51,7 @@ def signup(user: UserCreate, db: Session = Depends(get_db)):
 
 
 @app.post("/users/", response_model=User)
-def add(token: Annotated[str, Depends(oauth2_scheme)], user: UserCreate, db: Session = Depends(get_db)):
+def add(token: Annotated[str, Depends(get_decoded_token)], user: UserCreate, db: Session = Depends(get_db)):
     """
     Create a new user.
     """
@@ -122,7 +83,7 @@ def add(token: Annotated[str, Depends(oauth2_scheme)], user: UserCreate, db: Ses
 
 # Endpoint to retrieve all users
 @app.get("/users/", response_model=List[User])
-def get_users(token: Annotated[str, Depends(oauth2_scheme)], skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
+def get_users(token: Annotated[str, Depends(get_decoded_token)], skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
     
     """
     Get all users.
@@ -141,7 +102,7 @@ def get_users(token: Annotated[str, Depends(oauth2_scheme)], skip: int = 0, limi
 
 # Endpoint to retrieve a user by ID
 @app.get("/users/{user_id}", response_model=User)
-def get_user(token: Annotated[str, Depends(oauth2_scheme)], user_id: int, db: Session = Depends(get_db)):
+def get_user(token: Annotated[str, Depends(get_decoded_token)], user_id: int, db: Session = Depends(get_db)):
     """
     Get a specific user by ID.
     """
@@ -161,7 +122,7 @@ def get_user(token: Annotated[str, Depends(oauth2_scheme)], user_id: int, db: Se
 
 
 @app.put("/users/{user_id}", response_model=User)
-def update_user(token: Annotated[str, Depends(oauth2_scheme)], user_id: int, user_update: UserCreate, session: Session = Depends(get_db)):
+def update_user(token: Annotated[str, Depends(get_decoded_token)], user_id: int, user_update: UserCreate, session: Session = Depends(get_db)):
     """
     Update a user by ID.
     """
@@ -196,7 +157,7 @@ def update_user(token: Annotated[str, Depends(oauth2_scheme)], user_id: int, use
 
 
 @app.delete("/users/{user_id}", response_model=User)
-def delete_user(token: Annotated[str, Depends(oauth2_scheme)], user_id: int, session: Session = Depends(get_db)):
+def delete_user(token: Annotated[str, Depends(get_decoded_token)], user_id: int, session: Session = Depends(get_db)):
     """
     Delete a user by ID.
     """

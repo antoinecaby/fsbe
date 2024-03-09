@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from db.database import create_database
 from routers import users_router, companies_router, notifications_router, activities_router
+from internal import auth
 from sqlalchemy.orm import Session
 from db.database import engine
 from Security.SecurityManager import SecurityManager
@@ -24,6 +25,7 @@ security_manager = SecurityManager()
 create_database()
 app = FastAPI()
 
+app.include_router(auth.router, prefix="/auth", tags=["auth"])
 app.include_router(users_router.router, prefix="/users", tags=["Users"])
 app.include_router(companies_router.router, prefix="/companies", tags=["Companies"])
 app.include_router(notifications_router.router, prefix="/notifications", tags=["Notifications"])
