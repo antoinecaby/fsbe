@@ -1,17 +1,20 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
-from sqlmodel import select
-from db.database import get_session
+from db.database import get_db, get_session
+from internal.auth import get_decoded_token
 from model.models import Company
 from model.schemas import CompanyCreate
+from Security.SecurityManager import SecurityManager
 
 router = APIRouter()
+SECRET_KEY = "4gN94qiDdlB3bnlYVeHBaIPTGPgOildOrxnrPaKYSQM="
+security_manager = SecurityManager(SECRET_KEY)
 
 # CRUD operations for Companys
 
-@router.post("/companies/", response_model=Company)
-def create_company(company: CompanyCreate, session: Session = Depends(get_session)):
+@router.post("/companies", response_model=Company)
+def create_company(company: CompanyCreate, token: str = Depends(get_decoded_token), session: Session = Depends(get_db)):
     """
     Create a new company.
     """
@@ -21,8 +24,8 @@ def create_company(company: CompanyCreate, session: Session = Depends(get_sessio
     session.refresh(db_company)
     return db_company
 
-@router.get("/companies/", response_model=List[Company])
-def get_companies(skip: int = 0, limit: int = 10, session: Session = Depends(get_session)):
+@router.get("/companies", response_model=List[Company])
+def get_companies(token: str = Depends(get_decoded_token),skip: int = 0, limit: int = 10, session: Session = Depends(get_db)):
     """
     Get all companies.
     """
@@ -30,7 +33,7 @@ def get_companies(skip: int = 0, limit: int = 10, session: Session = Depends(get
     return companies
 
 @router.get("/companies/{company_id}", response_model=Company)
-def get_company(company_id: int, session: Session = Depends(get_session)):
+def get_company(company_id: int, token: str = Depends(get_decoded_token),session: Session = Depends(get_session)):
     """
     Get a specific company by ID.
     """
@@ -40,7 +43,7 @@ def get_company(company_id: int, session: Session = Depends(get_session)):
     return company
 
 @router.put("/companies/{company_id}", response_model=Company)
-def update_company(company_id: int, company_update: CompanyCreate, session: Session = Depends(get_session)):
+def update_company(company_id: int, company_update: CompanyCreate, token: str = Depends(get_decoded_token), session: Session = Depends(get_db)):
     """
     Update a company by ID.
     """
@@ -55,7 +58,7 @@ def update_company(company_id: int, company_update: CompanyCreate, session: Sess
     return db_company
 
 @router.delete("/companies/{company_id}", response_model=Company)
-def delete_company(company_id: int, session: Session = Depends(get_session)):
+def delete_company(company_id: int,token: str = Depends(get_decoded_token),session: Session = Depends(get_db)):
     """
     Delete a company by ID.
     """

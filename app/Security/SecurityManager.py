@@ -1,11 +1,12 @@
+# Security/SecurityManager.py
 from typing import Union
 from passlib.context import CryptContext
 from cryptography.fernet import Fernet
 
 class SecurityManager:
-    def __init__(self):
+    def __init__(self, secret_key: bytes):
         self.pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-        self.key = Fernet.generate_key()
+        self.key = secret_key
         self.fernet = Fernet(self.key)
 
     def verify_password(self, plain_password: str, hashed_password: str) -> bool:

@@ -1,4 +1,4 @@
-# database.py
+# db/database.py
 from sqlalchemy import create_engine, inspect
 from sqlmodel import SQLModel, Session
 from model.models import User, Company, Notification, PlanningActivity

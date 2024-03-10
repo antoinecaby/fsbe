@@ -2,7 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
 from sqlmodel import select
-from db.database import get_session
+from db.database import get_db, get_session
+from internal.auth import get_decoded_token
 from model.models import Notification
 from model.schemas import NotificationCreate
 
@@ -11,7 +12,7 @@ router = APIRouter()
 # CRUD operations for Notification
 
 @router.post("/notifications/", response_model=Notification)
-def create_notification(notification: NotificationCreate, session: Session = Depends(get_session)):
+def create_notification(notification: NotificationCreate,token: str = Depends(get_decoded_token), session: Session = Depends(get_db)):
     """
     Create a new notification.
     """
@@ -22,7 +23,7 @@ def create_notification(notification: NotificationCreate, session: Session = Dep
     return db_notification
 
 @router.get("/notifications/", response_model=List[Notification])
-def get_notifications(skip: int = 0, limit: int = 10, session: Session = Depends(get_session)):
+def get_notifications(skip: int = 0, limit: int = 10,token: str = Depends(get_decoded_token), session: Session = Depends(get_db)):
     """
     Get all notifications.
     """
@@ -30,7 +31,7 @@ def get_notifications(skip: int = 0, limit: int = 10, session: Session = Depends
     return notifications
 
 @router.get("/notifications/{notification_id}", response_model=Notification)
-def get_notification(notification_id: int, session: Session = Depends(get_session)):
+def get_notification(notification_id: int, token: str = Depends(get_decoded_token),session: Session = Depends(get_db)):
     """
     Get a specific notification by ID.
     """
@@ -40,7 +41,7 @@ def get_notification(notification_id: int, session: Session = Depends(get_sessio
     return notification
 
 @router.put("/notifications/{notification_id}", response_model=Notification)
-def update_notification(notification_id: int, notification_update: NotificationCreate, session: Session = Depends(get_session)):
+def update_notification(notification_id: int, notification_update: NotificationCreate,token: str = Depends(get_decoded_token), session: Session = Depends(get_db)):
     """
     Update a notification by ID.
     """
@@ -55,7 +56,7 @@ def update_notification(notification_id: int, notification_update: NotificationC
     return db_notification
 
 @router.delete("/notifications/{notification_id}", response_model=Notification)
-def delete_notification(notification_id: int, session: Session = Depends(get_session)):
+def delete_notification(notification_id: int, token: str = Depends(get_decoded_token),session: Session = Depends(get_db)):
     """
     Delete a notification by ID.
     """
