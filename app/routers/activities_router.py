@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
-from sqlmodel import select
-from db.database import get_session
+from db.database import get_db, get_session
+from internal.auth import get_decoded_token
 from model.models import PlanningActivity
 from model.schemas import PlanningActivityCreate
 
@@ -10,8 +10,8 @@ router = APIRouter()
 
 # CRUD operations for PlanningActivity
 
-@router.post("/activities/", response_model=PlanningActivity)
-def create_activity(activity: PlanningActivityCreate, session: Session = Depends(get_session)):
+@router.post("/activities", response_model=PlanningActivity)
+def create_activity(activity: PlanningActivityCreate, token: str = Depends(get_decoded_token),session: Session = Depends(get_db)):
     """
     Create a new planning activity.
     """
@@ -21,8 +21,8 @@ def create_activity(activity: PlanningActivityCreate, session: Session = Depends
     session.refresh(db_activity)
     return db_activity
 
-@router.get("/activities/", response_model=List[PlanningActivity])
-def get_activities(skip: int = 0, limit: int = 10, session: Session = Depends(get_session)):
+@router.get("/activities", response_model=List[PlanningActivity])
+def get_activities(skip: int = 0, limit: int = 10,token: str = Depends(get_decoded_token), session: Session = Depends(get_db)):
     """
     Get all planning activities.
     """
@@ -30,7 +30,7 @@ def get_activities(skip: int = 0, limit: int = 10, session: Session = Depends(ge
     return activities
 
 @router.get("/activities/{activity_id}", response_model=PlanningActivity)
-def get_activity(activity_id: int, session: Session = Depends(get_session)):
+def get_activity(activity_id: int,token: str = Depends(get_decoded_token), session: Session = Depends(get_db)):
     """
     Get a specific planning activity by ID.
     """
@@ -40,7 +40,7 @@ def get_activity(activity_id: int, session: Session = Depends(get_session)):
     return activity
 
 @router.put("/activities/{activity_id}", response_model=PlanningActivity)
-def update_activity(activity_id: int, activity_update: PlanningActivityCreate, session: Session = Depends(get_session)):
+def update_activity(activity_id: int, activity_update: PlanningActivityCreate, token: str = Depends(get_decoded_token),session: Session = Depends(get_db)):
     """
     Update a planning activity by ID.
     """
@@ -55,7 +55,7 @@ def update_activity(activity_id: int, activity_update: PlanningActivityCreate, s
     return db_activity
 
 @router.delete("/activities/{activity_id}", response_model=PlanningActivity)
-def delete_activity(activity_id: int, session: Session = Depends(get_session)):
+def delete_activity(activity_id: int,token: str = Depends(get_decoded_token), session: Session = Depends(get_db)):
     """
     Delete a planning activity by ID.
     """
