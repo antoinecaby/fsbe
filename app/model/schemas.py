@@ -8,6 +8,8 @@ class UserCreate(BaseModel):
     email: str
     password: str
     company_id: int
+    isAdmin: bool   # New attribute to indicate if the user is an admin
+
 
 class CompanyCreate(BaseModel):
     name: str
