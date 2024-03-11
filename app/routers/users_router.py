@@ -1,13 +1,13 @@
 # router/users_router.py
+
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import false
-from sqlmodel import Session
+from sqlalchemy.orm import Session
 from Security.SecurityManager import SecurityManager
 from model.models import User
 from model.schemas import UserCreate
 from db.database import get_db
-from internal.auth import  check_admin, get_decoded_token
+from internal.auth import check_admin, get_decoded_token
 
 router = APIRouter()
 SECRET_KEY = "4gN94qiDdlB3bnlYVeHBaIPTGPgOildOrxnrPaKYSQM="
@@ -27,7 +27,7 @@ def signup(user: UserCreate, db: Session = Depends(get_db)):
     encrypted_email = security_manager.encrypt(user.email)
     encrypted_first_name = security_manager.encrypt(user.firstName)
     encrypted_last_name = security_manager.encrypt(user.lastName)
-    
+
     is_admin_user = user.isAdmin if user.isAdmin else False
 
     # Create the User object with encrypted fields
@@ -54,7 +54,7 @@ async def add_user(user: UserCreate, token: str = Depends(get_decoded_token), db
     """
     Create a new user.
     """
-    if not check_admin(token,db):  # Check if the user is admin
+    if not check_admin(token, db):  # Check if the user is admin
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only admin users can view other users"
@@ -88,27 +88,23 @@ async def add_user(user: UserCreate, token: str = Depends(get_decoded_token), db
 
 # Retrieve all users endpoint
 @router.get("/users", response_model=List[User])
-def get_users(token: str = Depends(get_decoded_token), skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
+def get_users(token: str = Depends(get_decoded_token), db: Session = Depends(get_db)):
     """
     Get all users.
-    """    
-    if not check_admin(token,db):  # Check if the user is admin
+    """
+    if not check_admin(token, db):  # Check if the user is admin
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only admin users can view other users"
         )
-    # Retrieve users from the database
-    users = db.query(User).offset(skip).limit(limit).all()
+    # Retrieve all users from the database
+    users = db.query(User).all()
     # Decrypt email, first name, and last name for each user
     for user in users:
         user.email = security_manager.decrypt(user.email)
         user.firstName = security_manager.decrypt(user.firstName)
         user.lastName = security_manager.decrypt(user.lastName)
-    return users 
-
-    
-   
-
+    return users
 
 
 # Retrieve user by ID endpoint
@@ -117,7 +113,7 @@ async def get_user(user_id: int, token: str = Depends(get_decoded_token), db: Se
     """
     Get a specific user by ID.
     """
-    if not check_admin(token,db):  # Check if the user is admin
+    if not check_admin(token, db):  # Check if the user is admin
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only admin users can view other users"
@@ -139,11 +135,12 @@ async def get_user(user_id: int, token: str = Depends(get_decoded_token), db: Se
 
 # Update user by ID endpoint
 @router.put("/users/{user_id}", response_model=User)
-async def update_user(user_id: int, user_update: UserCreate, token: str = Depends(get_decoded_token), db: Session = Depends(get_db)):
+async def update_user(user_id: int, user_update: UserCreate, token: str = Depends(get_decoded_token),
+                      db: Session = Depends(get_db)):
     """
     Update a user by ID.
     """
-    if not check_admin(token,db):  # Check if the user is admin
+    if not check_admin(token, db):  # Check if the user is admin
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only admin users can update other users"
@@ -183,7 +180,7 @@ async def delete_user(user_id: int, token: str = Depends(get_decoded_token), db:
     """
     Delete a user by ID.
     """
-    if not check_admin(token,db):  # Check if the user is admin
+    if not check_admin(token, db):  # Check if the user is admin
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only admin users can delete other users"
