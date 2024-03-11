@@ -74,47 +74,15 @@ async def get_decoded_token(token: str = Depends(oauth2_scheme)) -> dict:
 
 
 
-async def is_admin(token: str, db: Session) -> bool:
-    try:
-        decoded_token = await get_decoded_token(token)
-        print("Decoded token:", decoded_token)  # Print the decoded token
-        username = decoded_token.get("sub")
-        print("Username:", username)  # Print the username extracted from the token
-        decrypted_username = security_manager.decrypt(username)
-        print("Decrypted username:", decrypted_username)  # Print the decrypted username
+def check_admin (token: str,db: Session) -> int:
+        admin =0
+        username = token["sub"]  # Access the 'sub' key directly from the token 
         all_users = db.query(User).all()
         for u in all_users:
-            print("User name:", u.user_name)  # Print each user's name
-            if security_manager.decrypt(u.email) == decrypted_username:
-                user = u
-                break
-        
-        return user.isAdmin if user else False
-    except (JWTError, AttributeError) as e:
-        print("Exception occurred:", e)  # Print any exceptions that occur
-        return False
+         if security_manager.decrypt(u.email) == username:
+             if u.isAdmin==True :
+               admin =1
+        print("admin= ",admin)
+        return admin
 
-
-
-def get_current_user(token: str = Depends(get_decoded_token), db: Session = Depends(get_db)) -> Optional[User]:
-    try:
-        username = token["sub"]  # Access the 'sub' key directly from the token
-        all_users = db.query(User).all()
-        for u in all_users:
-            if security_manager.decrypt(u.email) == username:
-                u.email = security_manager.decrypt(u.email)
-                u.firstName = security_manager.decrypt(u.firstName)
-                u.lastName = security_manager.decrypt(u.lastName)
-                return u
-        # User not found
-        return None
-    except JWTError as e:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token", headers={"WWW-Authenticate": "Bearer"}) from e
-
-
-def get_current_email(token: str = Depends(get_decoded_token)) -> str:
-    try:
-        username = token["sub"]  # Access the 'sub' key directly from the token
-        return username
-    except JWTError as e:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token", headers={"WWW-Authenticate": "Bearer"}) from e
+    

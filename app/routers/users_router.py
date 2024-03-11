@@ -7,7 +7,7 @@ from Security.SecurityManager import SecurityManager
 from model.models import User
 from model.schemas import UserCreate
 from db.database import get_db
-from internal.auth import get_current_email, get_current_user, get_decoded_token, is_admin
+from internal.auth import  check_admin, get_decoded_token
 
 router = APIRouter()
 SECRET_KEY = "4gN94qiDdlB3bnlYVeHBaIPTGPgOildOrxnrPaKYSQM="
@@ -54,7 +54,7 @@ async def add_user(user: UserCreate, token: str = Depends(get_decoded_token), db
     """
     Create a new user.
     """
-    if not await is_admin(token, db):  # Await is_admin function call
+    if not check_admin(token,db):  # Check if the user is admin
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only admin users can view other users"
@@ -91,11 +91,12 @@ async def add_user(user: UserCreate, token: str = Depends(get_decoded_token), db
 def get_users(token: str = Depends(get_decoded_token), skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
     """
     Get all users.
-    """
-    email = get_current_email(token) ;
-    print (f'Email: {email}')
-    admin = 0
-    
+    """    
+    if not check_admin(token,db):  # Check if the user is admin
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only admin users can view other users"
+        )
     # Retrieve users from the database
     users = db.query(User).offset(skip).limit(limit).all()
     # Decrypt email, first name, and last name for each user
@@ -103,22 +104,10 @@ def get_users(token: str = Depends(get_decoded_token), skip: int = 0, limit: int
         user.email = security_manager.decrypt(user.email)
         user.firstName = security_manager.decrypt(user.firstName)
         user.lastName = security_manager.decrypt(user.lastName)
-        if (email == user.email) : 
-            if (user.isAdmin ) :
-              admin = 1
-    
-    if  not admin :
-           raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only admin users can view users"
-            ) 
     return users 
 
-            
-        
-         
-        
-         
+    
+   
 
 
 
@@ -128,7 +117,7 @@ async def get_user(user_id: int, token: str = Depends(get_decoded_token), db: Se
     """
     Get a specific user by ID.
     """
-    if not await is_admin(token, db):  # Check if the user is admin
+    if not check_admin(token,db):  # Check if the user is admin
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only admin users can view other users"
@@ -154,7 +143,7 @@ async def update_user(user_id: int, user_update: UserCreate, token: str = Depend
     """
     Update a user by ID.
     """
-    if not await is_admin(token, db):  # Check if the user is admin
+    if not check_admin(token,db):  # Check if the user is admin
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only admin users can update other users"
@@ -194,7 +183,7 @@ async def delete_user(user_id: int, token: str = Depends(get_decoded_token), db:
     """
     Delete a user by ID.
     """
-    if not await is_admin(token, db):  # Check if the user is admin
+    if not check_admin(token,db):  # Check if the user is admin
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only admin users can delete other users"
