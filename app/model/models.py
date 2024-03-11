@@ -9,6 +9,8 @@ class User(SQLModel, table=True):
     email: str
     password: str
     company_id: int = Field(foreign_key="company.id")  # Foreign key relationship with Company table
+    isAdmin: bool   # New attribute to indicate if the user is an admin
+
 
     # Define the relationship between User and Company
     company: "Company" = Relationship(back_populates="users")
