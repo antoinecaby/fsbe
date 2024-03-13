@@ -89,3 +89,23 @@ def check_admin(token: str, db: Session) -> int:
                 admin = 1
     print("admin= ", admin)
     return admin
+
+
+def check_company_access(token: str, company_id: int, db: Session) -> bool:
+    """
+    Check if the user associated with the token has access to the data of the specified company.
+    """
+    username = token["sub"]  # Access the 'sub' key directly from the token
+    user_company_id = None
+    all_users = db.query(User).all()
+    for u in all_users:
+        if security_manager.decrypt(u.email) == username:
+            user_company_id = u.company_id
+            print("user_company_id : ",user_company_id)
+            break
+
+    if user_company_id is None:
+        return False
+    
+    # Check if the user's company ID matches the specified company ID
+    return user_company_id == company_id

@@ -1,5 +1,5 @@
 # model/models.py
-from typing import List
+from typing import List, Optional
 from sqlmodel import SQLModel, Field, Relationship
 
 class User(SQLModel, table=True):
@@ -8,6 +8,8 @@ class User(SQLModel, table=True):
     lastName:str 
     email: str
     password: str
+    company_id: Optional[int] = None  # Making company_id optional
+
     company_id: int = Field(foreign_key="company.id")  # Foreign key relationship with Company table
     isAdmin: bool   # New attribute to indicate if the user is an admin
 
