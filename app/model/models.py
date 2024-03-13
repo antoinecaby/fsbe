@@ -17,7 +17,7 @@ class User(SQLModel, table=True):
     # Define the relationship between User and Company
     company: "Company" = Relationship(back_populates="users")
 
-    # Define the relationship between User and PlanningActivity
+    # Define the many-to-many relationship between User and PlanningActivity
     activities: List["PlanningActivity"] = Relationship(back_populates="participant")
     
     # Define the relationship between User and Notification
@@ -52,5 +52,5 @@ class PlanningActivity(SQLModel, table=True):
     end_time: str
     user_id: int = Field(foreign_key="user.id")  # Foreign key relationship with User table
 
-    # Define the relationship between PlanningActivity and User
+    # Define the many-to-many relationship between User and PlanningActivity
     participant: List[User] = Relationship(back_populates="activities")

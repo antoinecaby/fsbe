@@ -23,6 +23,7 @@ def create_database():
         for model in [User, Company, Notification, PlanningActivity]:
             if not inspector.has_table(model.__tablename__):
                 model.__table__.create(engine)
+                print("Database tables created successfully.")
 
 from sqlalchemy.orm import Session
 
