@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from typing import List
 from db.database import get_db, get_session
 from internal.auth import get_decoded_token
-from model.models import Company
+from model.models import Company, User
 from model.schemas import CompanyCreate
 from Security.SecurityManager import SecurityManager
 
@@ -69,3 +69,28 @@ def delete_company(company_id: int,token: str = Depends(get_decoded_token),sessi
     session.delete(company)
     session.commit()
     return company
+
+
+
+@router.get("/companies/{company_id}/users", response_model=List[User])
+def get_users_in_company(company_id: int, token: str = Depends(get_decoded_token), db: Session = Depends(get_db)):
+    """
+    Get all users belonging to a specific company.
+    """
+    # Retrieve the company
+    company = db.query(Company).filter(Company.id == company_id).first()
+
+    # Verify the company's existence
+    if not company:
+        raise HTTPException(status_code=404, detail="Company not found")
+
+    # Retrieve users belonging to the company
+    users = db.query(User).filter(User.company_id == company_id).all()
+
+    # Decrypt email, first name, and last name for each user
+    for user in users:
+        user.email = security_manager.decrypt(user.email)
+        user.firstName = security_manager.decrypt(user.firstName)
+        user.lastName = security_manager.decrypt(user.lastName)
+
+    return users

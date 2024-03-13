@@ -4,7 +4,7 @@ from typing import List
 from sqlmodel import select
 from db.database import get_db, get_session
 from internal.auth import get_decoded_token
-from model.models import Notification
+from model.models import Notification, User
 from model.schemas import NotificationCreate
 
 router = APIRouter()
@@ -66,3 +66,24 @@ def delete_notification(notification_id: int, token: str = Depends(get_decoded_t
     session.delete(notification)
     session.commit()
     return notification
+
+
+@router.get("/users/{user_id}/notifications", response_model=List[Notification])
+def get_user_notifications(user_id: int, token: str = Depends(get_decoded_token), session: Session = Depends(get_db)):
+    """
+    Get all notifications for a specific user.
+    """
+    # Retrieve the user
+    user = session.query(User).filter(User.id == user_id).first()
+
+    # Verify the user's existence
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Retrieve notifications for the user
+    notifications = session.query(Notification).filter(Notification.user_id == user_id).all()
+    return notifications
+
+
+
+
