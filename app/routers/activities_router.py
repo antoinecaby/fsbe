@@ -66,3 +66,6 @@ def delete_activity(activity_id: int,token: str = Depends(get_decoded_token), se
     session.delete(activity)
     session.commit()
     return activity
+
+
+
