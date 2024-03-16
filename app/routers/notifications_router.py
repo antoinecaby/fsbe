@@ -87,3 +87,35 @@ def get_user_notifications(user_id: int, token: str = Depends(get_decoded_token)
 
 
 
+
+
+@router.put("/notifications/{notification_id}/unread", response_model=Notification)
+def mark_notification_as_unread(notification_id: int, token: str = Depends(get_decoded_token), session: Session = Depends(get_db)):
+    """
+    Mark a notification as unread.
+    """
+    notification = session.get(Notification, notification_id)
+    if notification is None:
+        raise HTTPException(status_code=404, detail="Notification not found")
+
+    # Update the status to "unread"
+    notification.status = "unread"
+    session.commit()
+    session.refresh(notification)
+    return notification
+
+
+@router.put("/notifications/{notification_id}/read", response_model=Notification)
+def mark_notification_as_read(notification_id: int, token: str = Depends(get_decoded_token), session: Session = Depends(get_db)):
+    """
+    Mark a notification as read.
+    """
+    notification = session.get(Notification, notification_id)
+    if notification is None:
+        raise HTTPException(status_code=404, detail="Notification not found")
+
+    # Update the status to "unread"
+    notification.status = "read"
+    session.commit()
+    session.refresh(notification)
+    return notification

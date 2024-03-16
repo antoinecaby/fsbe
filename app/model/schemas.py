@@ -21,12 +21,22 @@ class NotificationCreate(BaseModel):
     user_id: int
     activity_id: int
 
+
 class PlanningActivityCreate(BaseModel):
     name: str
     day: str
     start_time: str
     end_time: str
     user_id: int
+    
+
+class PlanningActivityUpdate(BaseModel):
+    name: Optional[str]
+    day: Optional[str]
+    start_time: Optional[str]
+    end_time: Optional[str]
+    status: Optional[str] = "unread"  
+
 
 class UserLogin(BaseModel):
     email: str

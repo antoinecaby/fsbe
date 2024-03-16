@@ -37,20 +37,29 @@ class Notification(SQLModel, table=True):
     id: int = Field(primary_key=True)
     message: str
     status: str
-    user_id: int = Field(foreign_key="user.id")  # Foreign key relationship with User table
-    activity_id: int
+    user_id: int = Field(foreign_key="user.id")
+    activity_id: int = Field(foreign_key="planningactivity.id")  # Add foreign key relationship
 
     # Define the relationship between Notification and User
     user: "User" = Relationship(back_populates="notifications")
 
+    # Define the relationship between Notification and PlanningActivity
+    activity: "PlanningActivity" = Relationship(back_populates="notifications")
+
+
 
 class PlanningActivity(SQLModel, table=True):
+    
     id: int = Field(primary_key=True)
     name: str
     day: str
     start_time: str
     end_time: str
-    user_id: int = Field(foreign_key="user.id")  # Foreign key relationship with User table
+    status: str = "unread"  
+    user_id: int = Field(foreign_key="user.id")
 
-    # Define the many-to-many relationship between User and PlanningActivity
+    # Define the relationship between PlanningActivity and User
     participant: List[User] = Relationship(back_populates="activities")
+
+    # Define the relationship between PlanningActivity and Notification
+    notifications: List[Notification] = Relationship(back_populates="activity")
